@@ -1,9 +1,9 @@
-# Atribución
+# Attribution
 
-Agent Orbs utiliza como referencia la integración local de Claude Code y Codex de Pixel Agents, en la copia modificada por Jean en `~/pixel-agents-custom`.
+Agent Orbs is based on the local Claude Code and Codex integration from [Pixel Agents](https://github.com/pixel-agents-hq/pixel-agents).
 
-La inspección de procesos Linux en `server/processes.mjs` adapta el método de `server/src/terminal/localProcesses.ts` y `nativeTerminalFocus.ts` de Pixel Agents. La detección de metadatos y los adaptadores de eventos se basan en los formatos observados en esa integración, con implementación independiente.
+The Linux process inspection in `server/processes.mjs` adapts the method from Pixel Agents' `server/src/terminal/localProcesses.ts` and `nativeTerminalFocus.ts`. Metadata detection and the event adapters follow the formats observed in that integration, with an independent implementation.
 
-Pixel Agents: Copyright (c) 2026 Pablo De Lucca, licencia MIT. Texto completo en `LICENSE.pixel-agents`.
+Pixel Agents: Copyright (c) 2026 Pablo De Lucca, MIT License. Full text in [`LICENSE.pixel-agents`](LICENSE.pixel-agents).
 
-La interfaz, distribución, shaders procedurales y servicio de Agent Orbs son propios de esta aplicación. No se incluyen sprites ni recursos gráficos de Pixel Agents.
+The interface, layout, procedural shaders and service of Agent Orbs are original to this project. No sprites or graphic assets from Pixel Agents are included.

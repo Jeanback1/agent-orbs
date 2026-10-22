@@ -1,6 +1,6 @@
 import {chromium} from '@playwright/test';
 import fs from 'node:fs';
-const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:1000}});
  await page.goto('http://127.0.0.1:3210');await page.getByRole('button',{name:'Abrir panel'}).click();await page.getByRole('button',{name:'Explorar demo'}).click();

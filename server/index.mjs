@@ -8,6 +8,7 @@ import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {SessionStore} from './store.mjs';
 import {listProcesses} from './processes.mjs';
 import {TranscriptIndex,TranscriptTail} from './transcripts.mjs';
+if(process.platform!=='linux'){console.error('Agent Orbs necesita Linux: detecta las sesiones a través de /proc.');process.exit(1);}
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const stateDir=process.env.AGENT_ORBS_STATE_DIR || path.join(os.homedir(),'.agent-orbs');
 fs.mkdirSync(stateDir,{recursive:true,mode:0o700});
