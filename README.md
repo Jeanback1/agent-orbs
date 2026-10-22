@@ -8,6 +8,16 @@ A local observatory for your [Claude Code](https://claude.com/claude-code) and [
 
 Everything runs on your machine. There are no accounts, no cloud and no telemetry. The server only listens on `127.0.0.1`.
 
+## Screenshots
+
+Two Claude Code sessions up close. The left one is working and its neurons fire; the right one is waiting for you.
+
+![A working Claude orb full of bright sparks next to a dim, waiting Claude orb](docs/working-vs-waiting.png)
+
+Claude and Codex side by side: one Claude session working, another waiting, and a Codex session working.
+
+![Two orange Claude orbs and one green Codex orb](docs/claude-and-codex.png)
+
 ## Requirements
 
 - **Linux.** Sessions are discovered through `/proc`, so macOS and Windows are not supported.

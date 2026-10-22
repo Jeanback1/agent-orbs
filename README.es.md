@@ -8,6 +8,16 @@ Un observatorio local de tus sesiones de [Claude Code](https://claude.com/claude
 
 Todo funciona en tu equipo. No hay cuentas, nube ni telemetría, y el servidor solo escucha en `127.0.0.1`.
 
+## Capturas
+
+Dos sesiones de Claude Code de cerca. La de la izquierda está trabajando y sus neuronas se activan; la de la derecha está en espera.
+
+![Un orbe de Claude trabajando, lleno de destellos, junto a otro tenue en espera](docs/working-vs-waiting.png)
+
+Claude y Codex juntos: una sesión de Claude trabajando, otra en espera y una de Codex trabajando.
+
+![Dos orbes naranjas de Claude y uno verde de Codex](docs/claude-and-codex.png)
+
 ## Requisitos
 
 - **Linux.** Las sesiones se detectan a través de `/proc`, por lo que no funciona en macOS ni en Windows.
