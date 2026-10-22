@@ -8,7 +8,7 @@ export class SessionStore {
     for (const proc of processes) {
       const key = processKey(proc); this.missing.delete(key);
       let session = [...this.sessions.values()].find(s => s.processKey === key);
-      const candidate = candidates.find(s => s.provider === proc.provider && this.owns(proc, s.sessionId));
+      const candidate = candidates.find(s => s.provider === proc.provider && this.owns(proc, s.sessionId)) || this.daemonCandidate(proc, processes, candidates);
       if (!session) {
         const id = candidate ? `${proc.provider}:${candidate.sessionId}` : `process:${key}`;
         session = this.sessions.get(id);
@@ -20,9 +20,15 @@ export class SessionStore {
           pid: proc.pid, provisional: !candidate && !session?.sessionId};
         this.sessions.set(id, session);
       }
+      session.parentPid = proc.parentPid;
       if (candidate) this.bindCandidate(session, candidate);
       const metadata=candidates.find(c=>c.provider===session.provider && c.sessionId===session.sessionId);
       if(metadata?.title)session.title=metadata.title;
+    }
+    for (const proc of processes) if (proc.parentThread) {
+      const child = [...this.sessions.values()].find(s => s.processKey === processKey(proc));
+      const parent = [...this.sessions.values()].find(s => s.provider === 'codex' && s.sessionId === proc.parentThread && live.has(s.processKey));
+      if (child && parent && parent !== child) child.parentPid = parent.pid;
     }
     for (const [id, s] of this.sessions) {
       if (s.processKey && !live.has(s.processKey)) {
@@ -31,6 +37,21 @@ export class SessionStore {
         if (misses >= 2) { this.sessions.delete(id); this.missing.delete(s.processKey); }
       } else if (!s.processKey) this.sessions.delete(id);
     }
+  }
+  // Recent Codex TUIs run their thread inside a shared daemon, so the TUI never opens the
+  // transcript. Alone in its folder, a TUI follows the thread written most recently since it
+  // started (new, resumed or switched). Sharing the folder, only a thread created right at its
+  // startup is accepted, and only when no other terminal there started at the same time.
+  daemonCandidate(proc, processes, candidates) {
+    if (proc.provider !== 'codex' || !proc.startedMs) return undefined;
+    const peers = processes.filter(p => p !== proc && p.provider === 'codex' && p.cwd === proc.cwd);
+    if (peers.some(p => !p.startedMs)) return undefined;
+    const taken = id => [...this.sessions.values()].some(s => s.sessionId === id && s.processKey && s.processKey !== processKey(proc));
+    const free = candidates.filter(c => c.provider === 'codex' && c.cwd === proc.cwd && (!c.originator || c.originator === 'codex-tui')
+      && !taken(c.sessionId) && !processes.some(p => p !== proc && this.owns(p, c.sessionId)));
+    if (!peers.length) return free.filter(c => c.mtime >= proc.startedMs).sort((a, b) => b.mtime - a.mtime)[0];
+    if (peers.some(p => Math.abs(p.startedMs - proc.startedMs) < 30000)) return undefined;
+    return free.filter(c => c.createdAt >= proc.startedMs - 2000 && c.createdAt - proc.startedMs < 30000).sort((a, b) => b.createdAt - a.createdAt)[0];
   }
   bindCandidate(session, candidate) {
     const id = `${candidate.provider}:${candidate.sessionId}`;

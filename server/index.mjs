@@ -54,7 +54,8 @@ app.post('/api/hooks/:provider',async(req,reply)=>{
   if(supplied.length!==expected.length || !timingSafeEqual(supplied,expected))return reply.code(401).send({error:'No autorizado'});
   const provider=req.params.provider,e=req.body;
   if(!['claude','codex'].includes(provider)||!e||typeof e.session_id!=='string'||e.session_id.length>200||typeof e.hook_event_name!=='string')return reply.code(400).send({error:'Evento inválido'});
-  store.reconcile(listProcesses(),index.scan());
+  // A hook may announce a thread a daemon-backed Codex terminal just switched to.
+  store.reconcile(listProcesses(),index.scan(false,1000));
   const accepted=store.apply(provider,e);publish();return {ok:true,matched:accepted};
 });
 if(fs.existsSync(path.join(root,'dist')))await app.register(fastifyStatic,{root:path.join(root,'dist')});

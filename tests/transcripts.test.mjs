@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import {TranscriptTail} from '../server/transcripts.mjs';
+import {TranscriptIndex, TranscriptTail} from '../server/transcripts.mjs';
 test('tail tolerates partial JSONL writes and emits lifecycle without message or arguments',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'orbs-tail-')),file=path.join(root,'session.jsonl'),tail=new TranscriptTail(),events=[];
  const candidate={file,provider:'codex',sessionId:'test'};
@@ -38,4 +38,16 @@ test('Claude end_turn text is final, while thinking and tool_use commentary are 
   fs.appendFileSync(file,msg('end_turn',[{type:'text',text:'private final'}]));tail.read(c,(p,e)=>events.push(e));assert.equal(events.at(-1).hook_event_name,'FinalResponse');
   assert.ok(!JSON.stringify(events).includes('private'));
  }finally{fs.rmSync(root,{recursive:true});}
+});
+test('Claude titles come from /rename first, then the generated ai-title, then the folder',()=>{
+ const home=fs.mkdtempSync(path.join(os.tmpdir(),'orbs-titles-')),dir=path.join(home,'.claude','projects','p'),file=path.join(dir,'s.jsonl');
+ const row=x=>JSON.stringify(x)+'\n',index=new TranscriptIndex(home),title=()=>index.scan(true).find(c=>c.sessionId==='s')?.title;
+ const prev=process.env.CLAUDE_CONFIG_DIR;delete process.env.CLAUDE_CONFIG_DIR;
+ try{
+  fs.mkdirSync(dir,{recursive:true});
+  fs.writeFileSync(file,row({type:'user',sessionId:'s',cwd:'/work/proyecto'}));assert.equal(title(),'proyecto');
+  fs.appendFileSync(file,row({type:'ai-title',aiTitle:'Título generado',sessionId:'s'}));fs.utimesSync(file,new Date(),new Date(Date.now()+1000));assert.equal(title(),'Título generado');
+  fs.appendFileSync(file,row({type:'user',sessionId:'s',cwd:'/work/proyecto',filler:'x'.repeat(300*1024)}));fs.utimesSync(file,new Date(),new Date(Date.now()+2000));assert.equal(title(),'Título generado');
+  fs.appendFileSync(file,row({type:'custom-title',customTitle:'Mi nombre',sessionId:'s'})+row({type:'ai-title',aiTitle:'Otro',sessionId:'s'}));fs.utimesSync(file,new Date(),new Date(Date.now()+3000));assert.equal(title(),'Mi nombre');
+ }finally{if(prev!==undefined)process.env.CLAUDE_CONFIG_DIR=prev;fs.rmSync(home,{recursive:true});}
 });

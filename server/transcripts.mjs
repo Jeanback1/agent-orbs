@@ -17,8 +17,8 @@ function records(file) {
 export class TranscriptIndex {
   cache = new Map(); candidates = []; lastScan = 0;
   constructor(home = os.homedir()) { this.home = home; }
-  scan(force = false) {
-    if (!force && Date.now()-this.lastScan < 10000) return this.candidates;
+  scan(force = false, maxAge = 10000) {
+    if (!force && Date.now()-this.lastScan < maxAge) return this.candidates;
     this.lastScan=Date.now(); const files=[];
     const walk=(dir,provider,depth=0)=>{
       if(depth>5) return;
@@ -50,8 +50,14 @@ export class TranscriptIndex {
         if(!info || first.isSidechain || info.source?.subagent) return [];
         const sessionId=provider==='codex'?info.id:info.sessionId;
         if(typeof sessionId!=='string' || typeof info.cwd!=='string')return [];
-        let title=''; for(const row of rows) if(row.type==='custom-title')title=clean(row.customTitle);
-        meta={file,provider,mtime,sessionId,cwd:info.cwd,title:title || path.basename(info.cwd) || 'Sesión'};
+        // Claude writes /rename as custom-title and its generated name as ai-title, repeating both
+        // through the file; only the head and tail are read, so keep the last ones seen.
+        let customTitle=meta?.customTitle||'', aiTitle=meta?.aiTitle||'';
+        for(const row of rows){
+          if(row.type==='custom-title' && clean(row.customTitle))customTitle=clean(row.customTitle);
+          if(row.type==='ai-title' && clean(row.aiTitle))aiTitle=clean(row.aiTitle);
+        }
+        meta={file,provider,mtime,sessionId,cwd:info.cwd,createdAt:Date.parse(info.timestamp)||undefined,originator:typeof info.originator==='string'?info.originator:undefined,customTitle,aiTitle,title:customTitle || aiTitle || path.basename(info.cwd) || 'Sesión'};
         this.cache.set(file,meta);
       }
       return [{...meta,title:titles.get(meta.sessionId)||meta.title}];

@@ -2,9 +2,10 @@
 export function constellation(count, width, height, zoom=1) {
   if (!count) return [];
   const positions=[];
-  let extent=1.8;
-  if(count===1)positions.push([0,0]);
-  else if(count===2){positions.push([-1.8,0],[1.8,0]);extent=3.5;}
+  // Horizontal and vertical room are separate: a single row needs little height.
+  let extent=1.8,extentY;
+  if(count===1){positions.push([0,0]);extent=extentY=1.5;}
+  else if(count===2){positions.push([-1.55,0],[1.55,0]);extent=3.1;extentY=1.5;}
   else if(count===3){positions.push([0,-1.85],[-1.9,1.45],[1.9,1.45]);extent=3.6;}
   else if(count===4){positions.push([0,-2.7],[-2.8,0],[2.8,0],[0,2.7]);extent=4.6;}
   else {
@@ -18,7 +19,7 @@ export function constellation(count, width, height, zoom=1) {
       remaining-=slots;extent=radius+1.9;ring++;
     }
   }
-  const radius=Math.max(18,Math.min(count===1?142:116,(width-60)/(extent*2),(height-150)/(extent*2)))*zoom;
+  const radius=Math.max(18,Math.min(count===1?300:count===2?240:116,(width-60)/(extent*2),(height-150)/((extentY??extent)*2)))*zoom;
   const anchors=positions.map(([x,y],i)=>({x:width/2+x*radius,y:height/2+y*radius,radius,seed:i*7.713+1.5}));
   return anchors;
 }
