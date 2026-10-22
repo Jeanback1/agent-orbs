@@ -1,0 +1,15 @@
+[Unit]
+Description=Agent Orbs - observatorio local de sesiones
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/agent-orbs
+ExecStart=/usr/bin/node %h/agent-orbs/server/index.mjs
+Environment=PORT=3210
+Restart=on-failure
+RestartSec=3
+UMask=0077
+
+[Install]
+WantedBy=default.target

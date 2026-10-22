@@ -1,0 +1,17 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.log
+
+# Local settings and runtime data
+.env
+.env.*
+!.env.example
+.agent-orbs/
+backups/
+*.sqlite
+*.sqlite-*
+*.jsonl
+coverage/
+.DS_Store
