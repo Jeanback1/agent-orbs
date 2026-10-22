@@ -24,5 +24,5 @@ export function neuralGeometry(count = 12000) {
   for(const [a,b] of edges)for(let lane=0;lane<2;lane++)for(let step=0;step<36;step++)for(const t of [step/36,(step+1)/36]){
     lines.push(...nodes[a],...nodes[b],t,(lane-.5)*.7,.6,3);
   }
-  return {points,lines:new Float32Array(lines),nodeCount:nodes.length};
+  return {points,lines:new Float32Array(lines),nodes:new Float32Array(nodes.flat()),nodeCount:nodes.length};
 }

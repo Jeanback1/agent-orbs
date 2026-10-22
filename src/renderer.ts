@@ -6,15 +6,15 @@ type Uniforms=Record<string,WebGLUniformLocation|null>;
 export class OrbRenderer {
   gl:WebGL2RenderingContext;bg:WebGLProgram;particles:WebGLProgram;
   bgVao:WebGLVertexArrayObject;pointVao:WebGLVertexArrayObject;lineVao:WebGLVertexArrayObject;
-  buffers:WebGLBuffer[]=[];uniforms:Uniforms;bgResolution:WebGLUniformLocation|null;lineCount:number;
+  buffers:WebGLBuffer[]=[];uniforms:Uniforms;bgResolution:WebGLUniformLocation|null;lineCount:number;nodes:Float32Array;
   constructor(public canvas:HTMLCanvasElement){
     const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,powerPreference:'high-performance'});
     if(!gl)throw new Error('WebGL2 no disponible');this.gl=gl;
     this.bg=this.program(vertex,background);this.particles=this.program(particleVertex,particleFragment);
     this.bgVao=gl.createVertexArray()!;
     const geometry=neuralGeometry();
-    this.pointVao=this.upload(geometry.points);this.lineVao=this.upload(geometry.lines);this.lineCount=geometry.lines.length/10;
-    this.uniforms=Object.fromEntries(['resolution','center','radius','dpr','phase','seed','working','responding','opacity','provider','selected'].map(n=>[n,gl.getUniformLocation(this.particles,n)]));
+    this.pointVao=this.upload(geometry.points);this.lineVao=this.upload(geometry.lines);this.lineCount=geometry.lines.length/10;this.nodes=geometry.nodes;
+    this.uniforms=Object.fromEntries(['resolution','center','radius','dpr','phase','seed','working','responding','opacity','provider','selected','nodes'].map(n=>[n,gl.getUniformLocation(this.particles,n)]));
     this.bgResolution=gl.getUniformLocation(this.bg,'resolution');
   }
   program(vert:string,frag:string){
@@ -38,7 +38,7 @@ export class OrbRenderer {
     gl.viewport(0,0,w,h);gl.disable(gl.BLEND);gl.bindVertexArray(this.bgVao);gl.useProgram(this.bg);
     gl.uniform2f(this.bgResolution,w,h);gl.drawArrays(gl.TRIANGLES,0,3);
     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.useProgram(this.particles);
-    const u=this.uniforms;gl.uniform2f(u.resolution,width,height);gl.uniform1f(u.dpr,dpr);let total=0;
+    const u=this.uniforms;gl.uniform2f(u.resolution,width,height);gl.uniform1f(u.dpr,dpr);gl.uniform3fv(u.nodes,this.nodes);let total=0;
     for(const o of orbs){
       if(o.radius<1||o.opacity<.005||o.x+o.radius*1.4<0||o.x-o.radius*1.4>width||o.y+o.radius*1.4<0||o.y-o.radius*1.4>height)continue;
       gl.uniform2f(u.center,o.x,o.y);gl.uniform1f(u.radius,o.radius);gl.uniform1f(u.phase,o.phase);gl.uniform1f(u.seed,o.seed);
