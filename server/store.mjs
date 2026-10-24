@@ -60,7 +60,7 @@ export class SessionStore {
     this.sessions.set(id, session);
   }
   apply(provider, event) {
-    if (!['claude','codex'].includes(provider) || typeof event.session_id !== 'string' || !event.session_id) return false;
+    if (!['claude','codex','grok'].includes(provider) || typeof event.session_id !== 'string' || !event.session_id) return false;
     const id = `${provider}:${event.session_id}`;
     let session = this.sessions.get(id);
     const ctx = event.terminal;
@@ -83,7 +83,7 @@ export class SessionStore {
       else{session.status='responding';session.activity='Respuesta final';session.responseUntil=this.now()+2200;}
     } else if (name === 'PermissionRequest' || (name === 'Notification' && ['permission_prompt','elicitation_dialog'].includes(event.notification_type))) {
       session.status = 'attention'; session.activity = 'Requiere tu intervención';session.responseUntil=0;
-    } else if (['Stop','Interrupt'].includes(name) || (name === 'Notification' && event.notification_type === 'idle_prompt')) {
+    } else if (['Stop','StopCancelled','Interrupt'].includes(name) || (name === 'Notification' && event.notification_type === 'idle_prompt')) {
       if(previousStatus==='responding' && !event.historical && session.responseUntil>this.now()){session.activity='Respuesta final';}
       else{session.status = 'waiting'; session.activity = '';session.responseUntil=0;}
     } else if (['PreToolUse','PostToolUse','PostToolUseFailure','UserPromptSubmit','SubagentStart'].includes(name)) {

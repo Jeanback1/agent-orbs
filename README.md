@@ -2,7 +2,7 @@
 
 [Español](README.es.md)
 
-A local observatory for your [Claude Code](https://claude.com/claude-code) and [Codex](https://github.com/openai/codex) terminal sessions. Each open terminal becomes a glowing orb of particles: orange for Claude, green for Codex. Orbs breathe while idle, fire like neurons while the agent works and flare when it delivers its final answer, so you can see at a glance which session needs you.
+A local observatory for your [Claude Code](https://claude.com/claude-code), [Codex](https://github.com/openai/codex) and [Grok](https://x.ai) terminal sessions. Each open terminal becomes a glowing orb of particles: orange for Claude, green for Codex and white for Grok. Orbs breathe while idle, fire like neurons while the agent works and flare when it delivers its final answer, so you can see at a glance which session needs you.
 
 ![Four orbs: two Claude sessions working and answering, two Codex sessions waiting](docs/screenshot.png)
 
@@ -22,7 +22,7 @@ Claude and Codex side by side: one Claude session working, another waiting, and 
 
 - **Linux.** Sessions are discovered through `/proc`, so macOS and Windows are not supported.
 - **Node.js 22.12 or newer**, and npm.
-- Claude Code and/or Codex running in a terminal.
+- Claude Code, Codex and/or Grok running in a terminal.
 - Optional: `sqlite3`, to read Codex's generated thread titles.
 - A browser with WebGL2. Without it, the app falls back to a simpler view.
 
@@ -43,7 +43,7 @@ To use another port: `PORT=3211 npm start`.
 
 ### Hooks
 
-`npm run install:hooks` adds a small observation-only hook to `~/.claude/settings.json` and `~/.codex/hooks.json`. With it, status changes show up instantly. Without it, the app still works by reading the session logs.
+`npm run install:hooks` adds a small observation-only hook to `~/.claude/settings.json`, `~/.codex/hooks.json` and `~/.grok/hooks/agent-orbs.json`. With it, status changes show up instantly. Without it, the app still works by reading the session logs.
 
 - Only the hook's own entries are added. Your other settings and hooks are preserved, and the previous files are backed up to `~/.agent-orbs/backups/`.
 - Codex may ask you to review the new hooks in `/hooks`.
@@ -74,7 +74,7 @@ The interface is in Spanish. The labels below are given in English.
   - **Detected**: a process was found, but its session could not be identified yet.
 - Subagents launched from a terminal appear as smaller moons next to their parent orb.
 
-Titles come from what each tool stores: a name set with `/rename` in Claude Code, the title Claude Code generates, or Codex's thread name. If there is none, the project folder name is used.
+Titles come from what each tool stores: a name set with `/rename` in Claude Code, the title Claude Code generates, Codex's thread name, or Grok's generated title. If there is none, the project folder name is used.
 
 ## Privacy and security
 
@@ -95,9 +95,9 @@ Then delete the folder and `~/.agent-orbs/`.
 
 ## Limitations
 
-- This app covers interactive terminal sessions on this computer. The desktop apps, remote sessions and non-interactive runs (`claude -p`, `codex exec`) are not tracked.
+- This app covers interactive terminal sessions on this computer. The desktop apps, remote sessions and non-interactive runs (`claude -p`, `codex exec`, `grok -p` / `grok --single`) are not tracked.
 - Recent Codex versions run threads inside a shared daemon. When several Codex terminals start in the same folder at the same moment, the app cannot tell which thread belongs to which terminal. Those terminals stay as **Detected** rather than guessing. Running `codex --no-daemon` avoids this.
-- The session formats of Claude Code and Codex are not public APIs. A new version of either tool may change them.
+- The session formats of Claude Code, Codex and Grok are not public APIs. A new version of any of them may change them.
 
 ## Development
 

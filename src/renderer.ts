@@ -43,7 +43,7 @@ export class OrbRenderer {
       if(o.radius<1||o.opacity<.005||o.x+o.radius*1.4<0||o.x-o.radius*1.4>width||o.y+o.radius*1.4<0||o.y-o.radius*1.4>height)continue;
       gl.uniform2f(u.center,o.x,o.y);gl.uniform1f(u.radius,o.radius);gl.uniform1f(u.phase,o.phase);gl.uniform1f(u.seed,o.seed);
       gl.uniform1f(u.working,o.working);gl.uniform1f(u.responding,o.responding);gl.uniform1f(u.opacity,o.opacity);
-      gl.uniform1f(u.selected,o.selected?1:0);gl.uniform1f(u.provider,o.provider==='codex'?1:0);
+      gl.uniform1f(u.selected,o.selected?1:0);gl.uniform1f(u.provider,o.provider==='grok'?2:o.provider==='codex'?1:0);
       gl.bindVertexArray(this.lineVao);gl.drawArrays(gl.LINES,0,this.lineCount);
       const count=Math.round((o.radius>95?12000:o.radius>65?8500:o.radius>35?5000:2500)*(quality<1? .65:1));
       gl.bindVertexArray(this.pointVao);gl.drawArrays(gl.POINTS,0,count);total+=count;

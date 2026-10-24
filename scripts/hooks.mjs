@@ -7,9 +7,13 @@ const state=process.env.AGENT_ORBS_STATE_DIR || path.join(os.homedir(),'.agent-o
 const action=process.argv[2];if(!['install','remove'].includes(action))throw new Error('Usa install o remove');
 const events=['SessionStart','SessionEnd','PreToolUse','PostToolUse','PostToolUseFailure','PermissionRequest','Stop','SubagentStart','SubagentStop','UserPromptSubmit'];
 const quote=s=>`'${s.replaceAll("'", "'\\''")}'`;
-for(const provider of ['claude','codex']){
- const dir=provider==='claude'?(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(),'.claude')):(process.env.CODEX_HOME || path.join(os.homedir(),'.codex'));
- const file=path.join(dir,provider==='claude'?'settings.json':'hooks.json');
+const targets=[
+ {provider:'claude',dir:process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(),'.claude'),file:'settings.json',events:[...events,'Notification'],matcher:true},
+ {provider:'codex',dir:process.env.CODEX_HOME || path.join(os.homedir(),'.codex'),file:'hooks.json',events:events.filter(e=>e!=='PostToolUseFailure'),matcher:false},
+ {provider:'grok',dir:path.join(process.env.GROK_HOME || path.join(os.homedir(),'.grok'),'hooks'),file:'agent-orbs.json',events:[...events.filter(e=>e!=='PermissionRequest'),'StopCancelled','Notification'],matcher:true},
+];
+for(const target of targets){
+ const {provider,dir}=target,file=path.join(dir,target.file);
  if(action==='remove'&&!fs.existsSync(file))continue;
  const original=fs.existsSync(file)?fs.readFileSync(file,'utf8'):null;
  const config=original?JSON.parse(original):{};
@@ -20,8 +24,8 @@ for(const provider of ['claude','codex']){
   hooks[event]=groups.map(group=>({...group,hooks:group.hooks?.filter(h=>h.command!==command)})).filter(group=>group.hooks?.length);
   if(!hooks[event].length)delete hooks[event];
  }
- if(action==='install')for(const event of [...events.filter(e=>provider==='claude'||e!=='PostToolUseFailure'),...(provider==='claude'?['Notification']:[])]){
-   (hooks[event] ||= []).push({...provider==='claude'?{matcher:''}:{},hooks:[{type:'command',command,timeout:event==='SessionEnd'?1:2}]});
+ if(action==='install')for(const event of target.events){
+   (hooks[event] ||= []).push({...target.matcher?{matcher:''}:{},hooks:[{type:'command',command,timeout:event==='SessionEnd'?1:2}]});
  }
  if(Object.keys(hooks).length)config.hooks=hooks;else delete config.hooks;
  fs.mkdirSync(dir,{recursive:true,mode:0o700});fs.mkdirSync(path.join(state,'backups'),{recursive:true,mode:0o700});

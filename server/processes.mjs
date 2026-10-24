@@ -17,6 +17,10 @@ export function providerOf(proc) {
   if (proc.argv.includes('app-server') || proc.argv.includes('daemon') || proc.argv.includes('exec')) return null;
   const name = path.basename(proc.argv[0] || '');
   if(name==='claude' && (proc.argv.includes('-p') || proc.argv.includes('--print')))return null;
+  if(name==='grok' || name.startsWith('grok-linux')){
+    if(proc.argv.includes('-p') || proc.argv.includes('--single') || proc.argv.includes('--prompt-json') || proc.argv.includes('--prompt-file'))return null;
+    return 'grok';
+  }
   if (name === 'claude' || name === 'codex') return name;
   if (name === 'node' && /(?:^|\/)@anthropic-ai\/claude-code\/cli\.js$/.test(proc.argv[1] || '')) return 'claude';
   if (name === 'node' && /(?:^|\/)@openai\/codex\/bin\/codex\.js$/.test(proc.argv[1] || '')) return 'codex';
@@ -34,7 +38,7 @@ export function listProcesses() {
       try{sessionFiles=fs.readdirSync(`/proc/${p.pid}/fd`).flatMap(fd=>{try{const name=path.basename(fs.readlinkSync(`/proc/${p.pid}/fd/${fd}`));return name.endsWith('.jsonl')?[name]:[];}catch{return [];}});}catch{}
       // Clock ticks are 100 Hz on Linux; startedMs lets daemon-backed sessions be matched by start time.
       const parentPid=agentAncestor(p,byPid,keptPids);
-      return {...p,sessionFiles,claudeSession:p.provider==='claude'?claudeSessionOf(p):undefined,parentPid,parentThread:parentPid?undefined:codexParentThread(p,byPid),startedMs:boot?boot+Number(p.startTime)*10:undefined};
+      return {...p,sessionFiles,claudeSession:p.provider==='claude'?claudeSessionOf(p):undefined,grokSession:p.provider==='grok'?grokSessionOf(p):undefined,parentPid,parentThread:parentPid?undefined:codexParentThread(p,byPid),startedMs:boot?boot+Number(p.startTime)*10:undefined};
     });
   } catch { return []; }
 }
@@ -62,6 +66,16 @@ export function codexParentThread(proc, byPid, root = '/proc') {
 }
 // Claude keeps its transcript closed between writes, but records the live session of each
 // process in sessions/<pid>.json; procStart guards against a recycled pid.
+// Grok records the live terminal of each interactive session in active_sessions.json.
+// pid_start is the same /proc starttime, so a recycled pid cannot claim the old session.
+export function grokSessionOf(proc, file = path.join(process.env.GROK_HOME || path.join(os.homedir(), '.grok'), 'active_sessions.json')) {
+  try {
+    const list = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!Array.isArray(list)) return undefined;
+    const hit = list.find(s => s && s.pid === proc.pid && String(s.pid_start) === String(proc.startTime) && typeof s.session_id === 'string');
+    return hit ? hit.session_id : undefined;
+  } catch { return undefined; }
+}
 export function claudeSessionOf(proc, dir = path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'sessions')) {
   try {
     const info = JSON.parse(fs.readFileSync(path.join(dir, `${proc.pid}.json`), 'utf8'));
@@ -69,7 +83,7 @@ export function claudeSessionOf(proc, dir = path.join(process.env.CLAUDE_CONFIG_
   } catch { return undefined; }
 }
 export function processOwnsSession(proc, id) {
-  if (proc.argv.includes(id) || proc.claudeSession === id) return true;
+  if (proc.argv.includes(id) || proc.claudeSession === id || proc.grokSession === id) return true;
   if(proc.sessionFiles)return proc.sessionFiles.some(name=>name.endsWith(`${id}.jsonl`));
   try {
     return fs.readdirSync(`/proc/${proc.pid}/fd`).some(fd => {

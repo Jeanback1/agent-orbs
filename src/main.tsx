@@ -17,7 +17,7 @@ function useSessions(){
  return {sessions,connected,received};
 }
 function demoSession(i:number):Session{
- const provider=i%2===0?'claude':'codex';
+ const provider=(['claude','codex','grok'] as const)[i%3];
  const titles=['Diseño del observatorio','API de sesiones','Exploración del proyecto','Pruebas de integración','Documentación','Refactor del cliente','Análisis del repositorio','Revisión de componentes'];
  return {id:`demo-${i}`,provider,title:titles[i%titles.length],cwd:`~/proyectos/${['observatorio','backend','portfolio','laboratorio'][i%4]}`,status:(['working','waiting','responding','attention'] as Status[])[i%4],activity:i%4===0?'Leyendo archivos':i%4===2?'Ejecutando pruebas':'',pid:900000+i,startedAt:Date.now()-((i+1)*127000),updatedAt:Date.now(),provisional:false,sessionId:`demo-${i}`};
 }
@@ -61,7 +61,7 @@ function App(){
     </>:<>
      <p className="panel-status" role="status">{demo?'Demostración · datos simulados':connected?'Conectado al servicio local':'Reconectando · los estados pueden estar desactualizados'}</p>
      <div className="session-list">{sessions.map(s=><button className="session-row" key={visualKey(s)} onClick={()=>select(visualKey(s))}><i className={`provider-dot ${s.provider}`}/><span><strong>{s.title}</strong><small>{providerLabels[s.provider]}{s.parentPid&&sessions.some(p=>p.pid===s.parentPid)?' · Subagente':''} · {statusLabels[s.status]}</small></span><span aria-hidden="true">›</span></button>)}</div>
-     {!sessions.length&&<p className="panel-note">{demo?'Sin sesiones simuladas.':received?'No hay sesiones abiertas. Abre Claude Code o Codex en una terminal.':'Esperando conexión con el servicio local.'}</p>}
+     {!sessions.length&&<p className="panel-note">{demo?'Sin sesiones simuladas.':received?'No hay sesiones abiertas. Abre Claude Code, Codex o Grok en una terminal.':'Esperando conexión con el servicio local.'}</p>}
      {graphics&&<div className="panel-section"><span>Fluidez</span><span className="performance-value">{metrics.fps?`${metrics.fps} FPS`:'Midiendo…'}</span></div>}
      <div className="panel-section"><span>Zoom</span><div className="inline-controls"><button className="icon-button" aria-label="Alejar" disabled={zoom<=.6} onClick={()=>setZoom(z=>Math.max(.6,z-.15))}>−</button><button className="zoom-value" aria-label="Restablecer zoom" onClick={()=>setZoom(1)}>{Math.round(zoom*100)}%</button><button className="icon-button" aria-label="Acercar" disabled={zoom>=1.9} onClick={()=>setZoom(z=>Math.min(2,z+.15))}>+</button></div></div>
      <div className="panel-section"><span>Sonido al terminar</span><button className={`switch ${sound?'enabled':''}`} role="switch" aria-label="Sonido al terminar" aria-checked={sound} onClick={toggleSound}><i/></button></div>

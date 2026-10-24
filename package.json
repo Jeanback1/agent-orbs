@@ -1,7 +1,7 @@
 {
   "name": "agent-orbs",
   "version": "1.0.0",
-  "description": "Local observatory that shows each Claude Code and Codex terminal session as an animated particle orb.",
+  "description": "Local observatory that shows each Claude Code, Codex and Grok terminal session as an animated particle orb.",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -19,6 +19,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "start": "node server/index.mjs",
+    "open": "sh scripts/open.sh",
     "test": "node --test tests/*.test.mjs",
     "install:hooks": "node scripts/hooks.mjs install",
     "remove:hooks": "node scripts/hooks.mjs remove",

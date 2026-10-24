@@ -54,7 +54,7 @@ app.post('/api/hooks/:provider',async(req,reply)=>{
   const supplied=Buffer.from(String(req.headers.authorization||'')),expected=Buffer.from(`Bearer ${token}`);
   if(supplied.length!==expected.length || !timingSafeEqual(supplied,expected))return reply.code(401).send({error:'No autorizado'});
   const provider=req.params.provider,e=req.body;
-  if(!['claude','codex'].includes(provider)||!e||typeof e.session_id!=='string'||e.session_id.length>200||typeof e.hook_event_name!=='string')return reply.code(400).send({error:'Evento inválido'});
+  if(!['claude','codex','grok'].includes(provider)||!e||typeof e.session_id!=='string'||e.session_id.length>200||typeof e.hook_event_name!=='string')return reply.code(400).send({error:'Evento inválido'});
   // A hook may announce a thread a daemon-backed Codex terminal just switched to.
   store.reconcile(listProcesses(),index.scan(false,1000));
   const accepted=store.apply(provider,e);publish();return {ok:true,matched:accepted};

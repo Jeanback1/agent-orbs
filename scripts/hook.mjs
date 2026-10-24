@@ -9,7 +9,7 @@ try {
   let input='';for await(const chunk of process.stdin){input+=chunk;if(input.length>1024*1024)process.exit(0);}
   const data=JSON.parse(input),provider=process.argv[2];
   const registry=JSON.parse(fs.readFileSync(path.join(process.env.AGENT_ORBS_STATE_DIR || path.join(os.homedir(),'.agent-orbs'),'server.json'),'utf8'));
-  if(!['claude','codex'].includes(provider)||!Number.isInteger(registry.port)||registry.port<1||registry.port>65535||typeof registry.token!=='string')process.exit(0);
+  if(!['claude','codex','grok'].includes(provider)||!Number.isInteger(registry.port)||registry.port<1||registry.port>65535||typeof registry.token!=='string')process.exit(0);
   let pid=process.ppid,terminal;
   for(let i=0;i<24 && pid>1;i++){
     const proc=readProcess(pid);if(!proc)break;

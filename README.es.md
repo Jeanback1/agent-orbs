@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-Un observatorio local de tus sesiones de [Claude Code](https://claude.com/claude-code) y [Codex](https://github.com/openai/codex) en terminal. Cada terminal abierta se convierte en un orbe de partículas: naranja para Claude y verde para Codex. En reposo, los orbes respiran. Mientras el agente trabaja, se activan como neuronas, y se iluminan cuando entrega su respuesta final. Así ves de un vistazo qué sesión te necesita.
+Un observatorio local de tus sesiones de [Claude Code](https://claude.com/claude-code), [Codex](https://github.com/openai/codex) y [Grok](https://x.ai) en terminal. Cada terminal abierta se convierte en un orbe de partículas: naranja para Claude, verde para Codex y blanco para Grok. En reposo, los orbes respiran. Mientras el agente trabaja, se activan como neuronas, y se iluminan cuando entrega su respuesta final. Así ves de un vistazo qué sesión te necesita.
 
 ![Cuatro orbes: dos sesiones de Claude trabajando y respondiendo, dos de Codex en espera](docs/screenshot.png)
 
@@ -22,7 +22,7 @@ Claude y Codex juntos: una sesión de Claude trabajando, otra en espera y una de
 
 - **Linux.** Las sesiones se detectan a través de `/proc`, por lo que no funciona en macOS ni en Windows.
 - **Node.js 22.12 o superior**, y npm.
-- Claude Code y/o Codex abiertos en una terminal.
+- Claude Code, Codex y/o Grok abiertos en una terminal.
 - Opcional: `sqlite3`, para leer los títulos que genera Codex.
 - Un navegador con WebGL2. Sin él, la app muestra una vista simplificada.
 
@@ -43,7 +43,7 @@ Para usar otro puerto: `PORT=3211 npm start`.
 
 ### Hooks
 
-`npm run install:hooks` añade un pequeño hook de solo observación a `~/.claude/settings.json` y `~/.codex/hooks.json`. Con él, los cambios de estado se ven al instante. Sin él, la app sigue funcionando a partir de los registros de las sesiones.
+`npm run install:hooks` añade un pequeño hook de solo observación a `~/.claude/settings.json`, `~/.codex/hooks.json` y `~/.grok/hooks/agent-orbs.json`. Con él, los cambios de estado se ven al instante. Sin él, la app sigue funcionando a partir de los registros de las sesiones.
 
 - Solo se añaden las entradas del propio hook. El resto de tu configuración y tus otros hooks se conservan, y los archivos anteriores se copian a `~/.agent-orbs/backups/`.
 - Codex puede pedirte revisar los hooks nuevos en `/hooks`.
@@ -77,7 +77,7 @@ Para otro puerto: `PORT=3211 npm run install:service`.
   - **Detectada**: se encontró el proceso, pero todavía no se pudo identificar su sesión.
 - Los subagentes lanzados desde una terminal aparecen como lunas pequeñas junto a su orbe principal.
 
-Los títulos salen de lo que guarda cada herramienta: un nombre puesto con `/rename` en Claude Code, el título que genera Claude Code o el nombre del hilo de Codex. Si no hay ninguno, se usa el nombre de la carpeta del proyecto.
+Los títulos salen de lo que guarda cada herramienta: un nombre puesto con `/rename` en Claude Code, el título que genera Claude Code, el nombre del hilo de Codex o el título que genera Grok. Si no hay ninguno, se usa el nombre de la carpeta del proyecto.
 
 ## Privacidad y seguridad
 
@@ -98,9 +98,9 @@ Después borra la carpeta y `~/.agent-orbs/`.
 
 ## Limitaciones
 
-- La app cubre sesiones interactivas de terminal en este equipo. No sigue las apps de escritorio, las sesiones remotas ni las ejecuciones no interactivas (`claude -p`, `codex exec`).
+- La app cubre sesiones interactivas de terminal en este equipo. No sigue las apps de escritorio, las sesiones remotas ni las ejecuciones no interactivas (`claude -p`, `codex exec`, `grok -p` / `grok --single`).
 - Las versiones recientes de Codex ejecutan los hilos dentro de un daemon compartido. Si varias terminales de Codex arrancan a la vez en la misma carpeta, la app no puede saber qué hilo corresponde a cada una. En ese caso quedan como **Detectada** en lugar de adivinar. Ejecutar `codex --no-daemon` lo evita.
-- Los formatos de sesión de Claude Code y Codex no son APIs públicas. Una versión nueva de cualquiera de las dos herramientas puede cambiarlos.
+- Los formatos de sesión de Claude Code, Codex y Grok no son APIs públicas. Una versión nueva de cualquiera de las tres puede cambiarlos.
 
 ## Desarrollo
 

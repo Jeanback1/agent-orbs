@@ -4,7 +4,7 @@ import {SessionStore} from '../server/store.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {claudeSessionOf, processOwnsSession} from '../server/processes.mjs';
+import {claudeSessionOf, grokSessionOf, processOwnsSession, providerOf} from '../server/processes.mjs';
 const proc=(pid,provider='codex',startTime='100')=>({pid,provider,startTime,cwd:'/same',argv:[provider]});
 const event=(session_id,hook_event_name,terminal)=>({session_id,hook_event_name,terminal});
 test('same folder has two independent provisional orbs, never guessed identities',()=>{
@@ -104,4 +104,26 @@ test('Claude sessions are read from sessions/<pid>.json only when procStart matc
   assert.equal(claudeSessionOf({pid:43,startTime:'1000'},dir),undefined);
   assert.ok(processOwnsSession({pid:42,argv:['claude'],sessionFiles:[],claudeSession:'abc'},'abc'));
  }finally{fs.rmSync(dir,{recursive:true});}
+});
+test('Grok sessions bind by pid and start time, and headless runs are ignored',()=>{
+ const file=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'orbs-grok-active-')),'active_sessions.json');
+ fs.writeFileSync(file,JSON.stringify([{session_id:'sess',pid:7,pid_start:'1000'},{session_id:'other',pid:7,pid_start:'2000'}]));
+ assert.equal(grokSessionOf({pid:7,startTime:'1000'},file),'sess');
+ assert.equal(grokSessionOf({pid:7,startTime:'2000'},file),'other');
+ assert.equal(grokSessionOf({pid:8,startTime:'1000'},file),undefined);
+ assert.equal(providerOf({argv:['grok']}),'grok');
+ assert.equal(providerOf({argv:['/opt/grok-linux-x86_64']}),'grok');
+ assert.equal(providerOf({argv:['grok','-p','haz esto']}),null);
+ assert.equal(providerOf({argv:['grok','--single','haz esto']}),null);
+ assert.ok(processOwnsSession({pid:7,argv:['grok'],sessionFiles:[],grokSession:'sess'},'sess'));
+});
+test('a Grok orb follows the same working and final-answer states',()=>{
+ const store=new SessionStore({owns:(p,id)=>p.provider==='grok' && id==='sess'});
+ store.reconcile([proc(1,'grok')],[{provider:'grok',sessionId:'sess',title:'Blanco',cwd:'/same'}]);
+ assert.equal(store.snapshot()[0].title,'Blanco');
+ assert.equal(store.apply('grok',event('sess','UserPromptSubmit')),true);
+ assert.equal(store.snapshot()[0].status,'working');
+ store.apply('grok',event('sess','StopCancelled'));assert.equal(store.snapshot()[0].status,'waiting');
+ store.apply('grok',event('sess','PreToolUse'));store.apply('grok',event('sess','FinalResponse'));
+ assert.equal(store.snapshot()[0].status,'responding');
 });

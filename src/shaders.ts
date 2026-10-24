@@ -76,9 +76,11 @@ void main(){
  vec2 pixel=center+vec2(p.x,-p.y)*radius*perspective;
  gl_Position=vec4(pixel/resolution*vec2(2.,-2.)+vec2(-1.,1.),0.,1.);
  float depth=.35+.65*(p.z*.5+.5);
- vec3 base=mix(vec3(.82,.27,.065),vec3(.055,.58,.31),provider);
- vec3 light=mix(vec3(1.,.72,.38),vec3(.43,1.,.71),provider);
- vec3 hot=mix(vec3(1.,.95,.86),vec3(.86,1.,.93),provider);
+ // provider: 0 Claude (orange), 1 Codex (green), 2 Grok (white).
+ vec3 base=mix(vec3(.82,.27,.065),vec3(.055,.58,.31),clamp(provider,0.,1.));
+ vec3 light=mix(vec3(1.,.72,.38),vec3(.43,1.,.71),clamp(provider,0.,1.));
+ vec3 hot=mix(vec3(1.,.95,.86),vec3(.86,1.,.93),clamp(provider,0.,1.));
+ if(provider>1.5){base=vec3(.78,.82,.88);light=vec3(.94,.97,1.);hot=vec3(1.,1.,1.);}
  float front=pow(max(0.,p.z),3.);
  float pulse=.72+.28*sin(t*24.-phase*1.7+seed);
  float gain=1.+working*.65+responding*1.8;

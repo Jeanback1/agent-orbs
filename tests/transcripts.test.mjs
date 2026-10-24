@@ -39,6 +39,30 @@ test('Claude end_turn text is final, while thinking and tool_use commentary are 
   assert.ok(!JSON.stringify(events).includes('private'));
  }finally{fs.rmSync(root,{recursive:true});}
 });
+test('Grok titles come from summary.json and events change status without forwarding text',()=>{
+ const home=fs.mkdtempSync(path.join(os.tmpdir(),'orbs-grok-')),dir=path.join(home,'sessions',encodeURIComponent('/work/proyecto'),'sess');
+ const prev=process.env.GROK_HOME;process.env.GROK_HOME=home;
+ const eventsFile=path.join(dir,'events.jsonl'),index=new TranscriptIndex(home),tail=new TranscriptTail(),events=[];
+ const line=row=>JSON.stringify(row)+'\n';
+ try{
+  fs.mkdirSync(dir,{recursive:true});
+  fs.writeFileSync(path.join(dir,'summary.json'),JSON.stringify({generated_title:'Título grok',info:{id:'sess',cwd:'/work/proyecto'},created_at:'2026-10-24T00:00:00Z'}));
+  fs.writeFileSync(eventsFile,line({type:'turn_started',prompt:'private prompt'}));
+  const candidate=index.scan(true).find(c=>c.sessionId==='sess');
+  assert.equal(candidate.title,'Título grok');assert.equal(candidate.cwd,'/work/proyecto');assert.equal(candidate.provider,'grok');
+  tail.read(candidate,()=>{});
+  fs.appendFileSync(eventsFile,line({type:'tool_started',tool_name:'read_file',arguments:{path:'secret'}}));
+  tail.read(candidate,(p,e)=>events.push(e));
+  assert.equal(events.at(-1).hook_event_name,'PreToolUse');assert.equal(events.at(-1).tool_name,'read_file');assert.equal(events.at(-1).historical,false);
+  fs.appendFileSync(eventsFile,line({type:'phase_changed',phase:'permission_prompt',message:'private question'}));
+  tail.read(candidate,(p,e)=>events.push(e));assert.equal(events.at(-1).hook_event_name,'PermissionRequest');
+  fs.appendFileSync(eventsFile,line({type:'turn_ended',outcome:'completed',text:'private final'}));
+  tail.read(candidate,(p,e)=>events.push(e));assert.equal(events.at(-1).hook_event_name,'FinalResponse');
+  fs.appendFileSync(eventsFile,line({type:'turn_ended',outcome:'cancelled'}));
+  tail.read(candidate,(p,e)=>events.push(e));assert.equal(events.at(-1).hook_event_name,'Stop');
+  assert.ok(!JSON.stringify(events).includes('private'));assert.ok(!JSON.stringify(events).includes('secret'));
+ }finally{if(prev===undefined)delete process.env.GROK_HOME;else process.env.GROK_HOME=prev;fs.rmSync(home,{recursive:true});}
+});
 test('Claude titles come from /rename first, then the generated ai-title, then the folder',()=>{
  const home=fs.mkdtempSync(path.join(os.tmpdir(),'orbs-titles-')),dir=path.join(home,'.claude','projects','p'),file=path.join(dir,'s.jsonl');
  const row=x=>JSON.stringify(x)+'\n',index=new TranscriptIndex(home),title=()=>index.scan(true).find(c=>c.sessionId==='s')?.title;
